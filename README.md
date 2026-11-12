@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # rl-planning：基于 SB3 SAC + LasVSim 的强化学习训练框架
 
 在千行仿真平台（LasVSim）上，用 stable-baselines3 的 SAC 算法训练自动驾驶决策/控制策略。框架通过 LasVSim Open API 与仿真平台交互采集数据，存入 SAC 内置经验池（ReplayBuffer），积累一定步数后开始训练。
@@ -136,3 +137,4 @@ python train.py --checkpoint models/sac_lasvsim_10000_steps.zip
 - **连接失败 / 401**：检查 token 是否过期（个人中心重新复制），endpoint 是否正确
 - **车辆不动或行为异常**：`action.steer_deg_range / accel_range` 与平台车型量程不匹配，按实际控制范围调整
 - **每轮结束平台行为**：SDK 的 `reset` 不接收 seed，随机性来自交通流重置；若平台不支持结束后 reset，框架会自动重建仿真实例兜底
+=======

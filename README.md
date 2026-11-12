@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # rl-planning：基于 SB3 SAC + LasVSim 的强化学习训练框架
 
 在千行仿真平台（LasVSim）上，用 stable-baselines3 的 SAC 算法训练自动驾驶决策/控制策略。框架通过 LasVSim Open API 与仿真平台交互采集数据，存入 SAC 内置经验池（ReplayBuffer），积累一定步数后开始训练。

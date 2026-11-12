@@ -176,6 +176,7 @@ class LasVSimAdapter:
         x = ep.get("x", 0.0)
         y = ep.get("y", 0.0)
         phi = ep.get("phi", 0.0)
+        lane_id = str(ep.get("lane_id", ""))
         lat_offset = ep.get("lat_offset", 0.0)
         u = em.get("u", 0.0)
         v = em.get("v", 0.0)
@@ -196,6 +197,10 @@ class LasVSimAdapter:
             "collision": collision,
         }
 
+        # 横向跟踪误差：自车质心投影到参考线最近点，在法线方向的垂直位移
+        t_error, _ = self._compute_t_error(x, y, raw_obs["ref_line"])
+        raw_obs["t_error"] = float(t_error)
+
         done_flags = {"collision": collision, "finished": finished, "failed": failed}
 
         info = {
@@ -203,8 +208,10 @@ class LasVSimAdapter:
             "step_message": message,
             "ego_state": {
                 "u": u, "v": v, "w": w, "phi": phi,
+                "lane_id": lane_id,
                 "lat_offset": lat_offset, "u_acc": u_acc,
                 "steer": steer, "lon_acc": lon_acc,
+                "t_error": float(t_error),
             },
             "collision": collision,
             "finished": finished,
@@ -238,6 +245,7 @@ class LasVSimAdapter:
                 "x": float(p.x) if p else 0.0,
                 "y": float(p.y) if p else 0.0,
                 "phi": float(pos.phi or 0.0),
+                "lane_id": str(pos.lane_id or ""),
                 "lat_offset": float(pos.t if pos.t is not None else (pos.lane_offset or 0.0)),
             }
         return out
@@ -266,12 +274,38 @@ class LasVSimAdapter:
         return bool(res.collision_status)
 
     def _get_ref_line(self, vehicle_id: str) -> np.ndarray:
+        """参考线点列 (x, y, phi)，phi 为切向角（中心差分）。
+
+        SDK 的 ReferenceLine.points 只有坐标没有朝向，切向角由折线相邻点差分得到，
+        供横向跟踪误差 t_error 与观测 route 使用。
+        """
         res = self._sim.get_vehicle_reference_lines(vehicle_id)
         if not res.reference_lines:
             return np.zeros((0, 3), dtype=np.float32)
         line = max(res.reference_lines, key=lambda l: len(l.points))
-        pts = [(p.x, p.y, 0.0) for p in line.points[:200]]
-        return np.asarray(pts, dtype=np.float32)
+        pts = np.asarray([(p.x, p.y) for p in line.points[:200]], dtype=np.float32)
+        phi = np.zeros(len(pts), dtype=np.float32)
+        if len(pts) >= 2:
+            seg = np.arctan2(np.diff(pts[:, 1]), np.diff(pts[:, 0]))
+            phi[0], phi[-1] = seg[0], seg[-1]
+            if len(pts) > 2:
+                phi[1:-1] = 0.5 * (seg[:-1] + seg[1:])
+        return np.column_stack([pts, phi])
+
+    @staticmethod
+    def _compute_t_error(x: float, y: float, ref_line: np.ndarray) -> Tuple[float, int]:
+        """横向跟踪误差：自车质心投影到参考线最近点的法向位移。
+
+        t_error = -(x-ref_x)*sin(ref_phi) + (y-ref_y)*cos(ref_phi)
+        （n = (-sin φ, cos φ) 为参考线左法向；t_error > 0 表示自车在参考线左侧）
+        """
+        if ref_line.shape[0] == 0:
+            return 0.0, -1
+        d = (ref_line[:, 0] - x) ** 2 + (ref_line[:, 1] - y) ** 2
+        idx = int(np.argmin(d))
+        rx, ry, rphi = ref_line[idx]
+        t = -(x - rx) * np.sin(rphi) + (y - ry) * np.cos(rphi)
+        return float(t), idx
 
     def _get_other_vehicles(self) -> np.ndarray:
         all_ids = self._sim.get_vehicle_id_list()

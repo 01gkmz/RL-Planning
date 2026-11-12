@@ -36,9 +36,17 @@ reward:
   v_target: 10.0      # 速度奖励目标(m/s)
   steer_norm: 0.6    # 转角惩罚归一化(弧度)
   accel_norm: 3.0     # 加速度惩罚归一化
+  # 横向跟踪误差惩罚: punish = scale * piecewise(t_error) * P_lat
+  #   |t_error| < 0.3m 用平方项(梯度平缓，允许微小居中浮动，避免高频抖舵)
+  #   |t_error| >= 0.3m 用线性项(防换道大误差梯度爆炸)，0.3m 处分段连续
+  dist_lat:
+    scale: 5.0        # punish_dist_lat 总缩放
+    switch_m: 0.3     # 分段点(m)
+    linear_slope: 0.02
+    linear_bias: 0.084
+    lat_discount: 1.0 # P_lat；匝道/汇流时状态机经 info["lat_discount"] 下调目标车道惩罚
   weights:
     speed: 1.0        # 速度跟踪奖励
-    lateral: -0.5     # 横向偏移惩罚
     accel: -0.2       # 纵向加速度惩罚
     steer: -0.3       # 方向盘转角惩罚
     collision: -100.0  # 碰撞惩罚

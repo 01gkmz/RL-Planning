@@ -44,10 +44,25 @@ class ObsCfg:
 
 
 @dataclass
+class DistLatCfg:
+    """横向跟踪误差惩罚参数。
+
+    punish_dist_lat = scale * piecewise(t_error) * P_lat
+    分段函数（|t_error| 单位 m）：
+        < switch_m 时用平方项 t_error^2，误差小时梯度平缓，允许微小居中浮动；
+        >= switch_m 时用线性项 linear_slope*|t| + linear_bias，防止换道大误差梯度爆炸。
+    """
+    scale: float = 5.0
+    switch_m: float = 0.3
+    linear_slope: float = 0.02
+    linear_bias: float = 0.084  # 与平方项在 switch_m 处连续: 0.02*0.3+0.084 = 0.09 = 0.3^2
+    lat_discount: float = 1.0  # P_lat 默认值；匝道/汇流场景由状态机经 info["lat_discount"] 覆盖
+
+
+@dataclass
 class RewardCfg:
     weights: dict = field(default_factory=lambda: {
         "speed": 1.0,
-        "lateral": -0.5,
         "accel": -0.2,
         "steer": -0.3,
         "collision": -10.0,
@@ -57,6 +72,7 @@ class RewardCfg:
     v_target: float = 10.0  # 目标车速(m/s)，速度奖励基准
     steer_norm: float = 0.6  # 方向盘转角归一化(弧度)
     accel_norm: float = 3.0  # 纵向加速度归一化(m/s^2)
+    dist_lat: DistLatCfg = field(default_factory=DistLatCfg)
 
 
 @dataclass
@@ -115,6 +131,9 @@ def load_cfg(path: str) -> Cfg:
     cfg.action = _build(ActionCfg, raw.get("action"))
     cfg.obs = _build(ObsCfg, raw.get("obs"))
     cfg.reward = _build(RewardCfg, raw.get("reward"))
+    # 嵌套子配置
+    if isinstance(cfg.reward.dist_lat, dict):
+        cfg.reward.dist_lat = _build(DistLatCfg, cfg.reward.dist_lat)
     cfg.term = _build(TermCfg, raw.get("term"))
     cfg.train = _build(TrainCfg, raw.get("train"))
     return cfg

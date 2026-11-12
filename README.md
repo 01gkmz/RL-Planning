@@ -80,15 +80,25 @@ scenario:
 
 奖励 = 各子项加权和，详见 [reward.py](gymnasium_env/envs/reward.py)：
 
+- **横向跟踪误差惩罚（dist_lat）**：自车质心投影到参考线最近点的法向位移
+  `t_error = -(ego_x-ref_x)·sin(ref_φ) + (ego_y-ref_y)·cos(ref_φ)`
+  分段惩罚：`|t_error| < 0.3m` 用平方项（梯度平缓，允许微小居中浮动、避免高频抖舵）；`≥ 0.3m` 用线性项 `0.02·|t| + 0.084`（防换道大误差梯度爆炸，0.3m 处分段连续）
+  `punish = scale(5.0) × piecewise(t_error) × P_lat`；`P_lat` 默认 1.0，匝道/汇流场景可由状态机经 `info["lat_discount"]` 下调目标车道惩罚
+
 ```yaml
 reward:
   v_target: 10.0      # 速度奖励目标(m/s)
+  dist_lat:
+    scale: 5.0
+    switch_m: 0.3
+    linear_slope: 0.02
+    linear_bias: 0.084
+    lat_discount: 1.0
   weights:
     speed: 1.0        # min(u, v_target)/v_target
-    lateral: -0.5     # -|横向偏移|
     accel: -0.2       # 加速度平滑性惩罚
     steer: -0.3       # 方向盘转角二次惩罚
-    collision: -10.0  # 碰撞（回合结束一次性）
+    collision: -100.0 # 碰撞（回合结束一次性）
     finish: 20.0      # 正常跑完场景
     fail: -10.0       # 仿真失败
 ```

@@ -1,0 +1,68 @@
+# ================= lasvsim 平台连接 =================
+lasvsim:
+  endpoint: "https://qianxing-api.risenlighten.com"  # 接口地址，也可用环境变量 QX_ENDPOINT
+  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjQyNCwib2lkIjoxMTYsIm5hbWUiOiLmnY7mgJ3nu6oiLCJpZGVudGl0eSI6Im5vcm1hbCIsInBlcm1pc3Npb25zIjpbXSwiaXNzIjoidXNlciIsInN1YiI6Ikxhc1ZTaW0iLCJleHAiOjE3OTQ0NjA5MDUsIm5iZiI6MTc5MTg2ODkwNSwiaWF0IjoxNzkxODY4OTA1LCJqdGkiOiI0MjQifQ.ifXks3yXNioaUEIsCUPy3cer-L9cbQqEcUrQaKg-gFA"                                          # 授权token，留空则读环境变量 QX_TOKEN
+  local_mode: false                                  # true: 使用本地 opensim 仿真
+
+# ================= 场景（千行平台任务/剧本） =================
+scenario:
+  task_id: 16625     # 平台任务ID，改成你自己的
+  record_id: 231018   # 平台剧本ID，改成你自己的
+
+# ================= 仿真参数 =================
+sim:
+  dt: 0.1                 # 仿真步长(秒)，用于 sim_time 计时
+  reset_traffic_flow: true  # 每轮 reset 时重置交通流
+
+# ================= 动作空间 =================
+# 网络输出 [-1,1]^2: [归一化方向盘, 归一化加速度] -> 物理量
+action:
+  steer_cmd_range: [-1.0, 1.0]
+  accel_cmd_range: [-1.0, 1.0]
+  steer_deg_range: [-180.0, 180.0]  # 物理方向盘转角(度)，按车型调整
+  accel_range: [-3.0, 3.0]          # 物理纵向加速度，按平台单位调整
+
+# ================= 观测构建 =================
+obs:
+  v_target: 10.0      # 目标车速(m/s)，ego速度归一化
+  w_norm: 0.5         # 横摆角速度归一化(rad/s)
+  lat_norm: 2.0       # 横向偏移归一化(m)
+  dist_norm: 50.0     # 相对距离归一化(m)
+  num_neighbors: 5    # 观测最近车辆数
+  ref_points: 20      # 参考线采样点数
+
+# ================= 奖励 =================
+reward:
+  v_target: 10.0      # 速度奖励目标(m/s)
+  steer_norm: 180.0   # 转角惩罚归一化(度)
+  accel_norm: 3.0     # 加速度惩罚归一化
+  weights:
+    speed: 1.0        # 速度跟踪奖励
+    lateral: -0.5     # 横向偏移惩罚
+    accel: -0.2       # 纵向加速度惩罚
+    steer: -0.3       # 方向盘转角惩罚
+    collision: -100.0  # 碰撞惩罚
+    finish: 20.0      # 正常跑完奖励
+    fail: -10.0       # 仿真失败惩罚
+
+# ================= 终止条件 =================
+term:
+  max_episode_time: 60.0     # 单轮最长仿真时长(秒)，超过 truncated
+  collision_terminate: true  # 碰撞立即终止
+
+# ================= 训练 =================
+train:
+  total_timesteps: 200000    # 总交互步数
+  buffer_size: 1000000       # 经验池(ReplayBuffer)大小
+  learning_starts: 1000      # 先积累多少步经验再开始训练
+  batch_size: 256
+  learning_rate: 0.0003
+  gamma: 0.99
+  tau: 0.005
+  train_freq: 1              # 每收集多少步训练一次
+  gradient_steps: 1
+  ent_coef: "auto"
+  net_arch: [256, 256]
+  checkpoint_freq: 10000     # 每多少步保存一次 checkpoint
+  log_dir: "./logs"          # tensorboard 日志目录
+  save_path: "./models/sac_lasvsim"  # 模型保存路径

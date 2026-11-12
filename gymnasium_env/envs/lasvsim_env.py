@@ -61,8 +61,8 @@ class LasVSimEnv(gym.Env):
             raise RuntimeError("episode 已结束，请先调用 reset()")
 
         action = np.asarray(action, dtype=np.float32)
-        steer_deg, lon_acc = self.action_mapper.to_physical(action)
-        self.adapter.set_control(steer_deg, lon_acc)
+        steer_rad, lon_acc = self.action_mapper.to_physical(action)
+        self.adapter.set_control(steer_rad, lon_acc)
 
         try:
             res = self.adapter.step()

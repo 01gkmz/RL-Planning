@@ -139,8 +139,8 @@ class LasVSimAdapter:
         self._step_count = 0
         return self._collect(self._sim)
 
-    def set_control(self, steer_deg: float, lon_acc: float):
-        self._sim.set_vehicle_control_info(self._ego_id, steer_deg, lon_acc)
+    def set_control(self, steer_rad: float, lon_acc: float):
+        self._sim.set_vehicle_control_info(self._ego_id, steer_rad, lon_acc)
 
     def step(self) -> AdapterResult:
         step_res = self._sim.step()

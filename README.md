@@ -73,7 +73,7 @@ scenario:
 
 ### 动作与观测（action / obs 段）
 
-- `action.steer_deg_range` / `accel_range`：归一化动作映射到的物理量程，需按平台车型实际控制范围调整
+- `action.steer_rad_range` / `accel_range`：归一化动作映射到的物理量程。**转向角平台按弧度解释**（实测确认，勿填角度值），需按平台车型实际控制范围调整
 - `obs.num_neighbors` / `ref_points`：观测中保留的最近车辆数、参考线采样点数
 
 ### 奖励（reward 段）
@@ -134,6 +134,5 @@ python train.py --checkpoint models/sac_lasvsim_10000_steps.zip
 
 - **提示"请先填写任务ID与剧本ID"**：确认 yaml 中 `scenario.task_id / record_id` 非 0；若已填仍报错，检查是否在项目根目录运行（`train.py` 默认按相对路径找 `configs/sac_lasvsim.yaml`），或改用 `--config` 传绝对路径
 - **连接失败 / 401**：检查 token 是否过期（个人中心重新复制），endpoint 是否正确
-- **车辆不动或行为异常**：`action.steer_deg_range / accel_range` 与平台车型量程不匹配，按实际控制范围调整
+- **车辆不动或行为异常**：`action.steer_rad_range / accel_range` 与平台车型量程不匹配，按实际控制范围调整。注意转向角单位是**弧度**，填角度值会导致转向饱和
 - **每轮结束平台行为**：SDK 的 `reset` 不接收 seed，随机性来自交通流重置；若平台不支持结束后 reset，框架会自动重建仿真实例兜底
-=======

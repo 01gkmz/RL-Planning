@@ -29,7 +29,7 @@ class ActionCfg:
     steer_cmd_range: List[float] = field(default_factory=lambda: [-1.0, 1.0])
     accel_cmd_range: List[float] = field(default_factory=lambda: [-1.0, 1.0])
     # 归一化动作 -> 物理量映射
-    steer_deg_range: List[float] = field(default_factory=lambda: [-180.0, 180.0])
+    steer_rad_range: List[float] = field(default_factory=lambda: [-0.6, 0.6])  # 方向盘转角(弧度)
     accel_range: List[float] = field(default_factory=lambda: [-3.0, 3.0])
 
 
@@ -55,7 +55,7 @@ class RewardCfg:
         "fail": -10.0,
     })
     v_target: float = 10.0  # 目标车速(m/s)，速度奖励基准
-    steer_norm: float = 180.0  # 方向盘转角归一化(度)
+    steer_norm: float = 0.6  # 方向盘转角归一化(弧度)
     accel_norm: float = 3.0  # 纵向加速度归一化(m/s^2)
 
 

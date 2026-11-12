@@ -7,7 +7,7 @@ import yaml
 
 @dataclass
 class LasVSimCfg:
-    endpoint: str = "https://qianxing-api.risenlighten.com"
+    endpoint: str = ""
     token: str = ""  # 留空则读环境变量 QX_TOKEN
     local_mode: bool = False  # True 时使用本地 opensim 仿真
 

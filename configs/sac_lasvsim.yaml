@@ -1,7 +1,7 @@
 # ================= lasvsim 平台连接 =================
 lasvsim:
-  endpoint: "https://qianxing-api.risenlighten.com"  # 接口地址，也可用环境变量 QX_ENDPOINT
-  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjQyNCwib2lkIjoxMTYsIm5hbWUiOiLmnY7mgJ3nu6oiLCJpZGVudGl0eSI6Im5vcm1hbCIsInBlcm1pc3Npb25zIjpbXSwiaXNzIjoidXNlciIsInN1YiI6Ikxhc1ZTaW0iLCJleHAiOjE3OTQ0NjA5MDUsIm5iZiI6MTc5MTg2ODkwNSwiaWF0IjoxNzkxODY4OTA1LCJqdGkiOiI0MjQifQ.ifXks3yXNioaUEIsCUPy3cer-L9cbQqEcUrQaKg-gFA"                                          # 授权token，留空则读环境变量 QX_TOKEN
+  endpoint: "http://localhost:8290"  # 接口地址，也可用环境变量 QX_ENDPOINT
+  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjQyNCwib2lkIjoxMTYsIm5hbWUiOiLmnY7mgJ3nu6oiLCJpZGVudGl0eSI6Im5vcm1hbCIsInBlcm1pc3Npb25zIjpbXSwiaXNzIjoidXNlciIsInN1YiI6Ikxhc1ZTaW0iLCJleHAiOjE3OTY4OTU5NjcsIm5iZiI6MTc5NDMwMzk2NywiaWF0IjoxNzk0MzAzOTY3LCJqdGkiOiI0MjQifQ.w-wysCeE4u9DF7MnIt28kii47MFbn6gB7eHgUa9eOEA"                                          # 授权token，留空则读环境变量 QX_TOKEN
   local_mode: false                                  # true: 使用本地 opensim 仿真
 
 # ================= 场景（千行平台任务/剧本） =================

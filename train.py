@@ -30,11 +30,15 @@ def make_env(cfg):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="configs/sac_lasvsim.yaml", help="配置文件路径")
+    parser.add_argument("--config", default="/home/lisixu/rl-planning/configs/sac_lasvsim.yaml", help="配置文件路径")
     parser.add_argument("--checkpoint", default=None, help="从已有模型继续训练")
+    
     args = parser.parse_args()
 
     cfg = load_cfg(args.config)
+
+    print("DEBUG scenario:", cfg.scenario)
+
     if cfg.scenario.task_id == 0 or cfg.scenario.record_id == 0:
         print("[警告] scenario.task_id / record_id 为 0，请先在配置文件中填写千行平台的真实任务ID与剧本ID")
 

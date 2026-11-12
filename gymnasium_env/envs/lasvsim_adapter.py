@@ -36,8 +36,8 @@ class LasVSimAdapter:
         self._client: Optional[Client] = None
         self._sim = None
         self._ego_id: Optional[str] = None
-        self._task_id: Optional[int] = None
-        self._record_id: Optional[int] = None
+        self._task_id: Optional[int] = cfg.scenario.task_id
+        self._record_id: Optional[int] = cfg.scenario.record_id
         self._connected = False
         self._step_count = 0
         self._dt = cfg.sim.dt
@@ -45,8 +45,17 @@ class LasVSimAdapter:
     # ---------------- 生命周期 ----------------
 
     def connect(self, task_id: Optional[int] = None, record_id: Optional[int] = None):
+        """建立连接并初始化仿真实例。
+
+        参数为 None 时回退到配置文件中的 scenario.task_id / scenario.record_id，
+        避免上层调用 connect() 不传参时把有效值覆盖成 None。
+        """
         if self._connected:
             return
+        if task_id is None:
+            task_id = self.cfg.scenario.task_id
+        if record_id is None:
+            record_id = self.cfg.scenario.record_id
         self._task_id = task_id
         self._record_id = record_id
         self._new_simulation()
@@ -70,6 +79,7 @@ class LasVSimAdapter:
     def _new_simulation(self):
         """从平台拷贝剧本并初始化一个仿真实例。"""
         self._client = self._init_client()
+        print(f"DEBUG: task_id={self._task_id!r}, record_id={self._record_id!r}")
         new_record = self._client.process_task.copy_record(self._task_id, self._record_id)
         self._sim = self._client.init_simulator_from_config(
             SimulatorConfig(
@@ -93,7 +103,21 @@ class LasVSimAdapter:
 
     # ---------------- 环境接口 ----------------
 
-    def reset(self, task_id: int, record_id: int, seed: Optional[int] = None) -> AdapterResult:
+    def reset(
+        self,
+        task_id: Optional[int] = None,
+        record_id: Optional[int] = None,
+        seed: Optional[int] = None,
+    ) -> AdapterResult:
+        """重置仿真实例。
+
+        task_id / record_id 为 None 时从配置读取，兼容 Gymnasium 的 reset(seed=...) 调用。
+        """
+        if task_id is None:
+            task_id = self.cfg.scenario.task_id
+        if record_id is None:
+            record_id = self.cfg.scenario.record_id
+
         if not self._connected:
             self.connect(task_id, record_id)
         elif (task_id, record_id) != (self._task_id, self._record_id):

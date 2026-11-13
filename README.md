@@ -134,6 +134,21 @@ python train.py --checkpoint models/sac_lasvsim_10000_steps.zip
 - 每 `checkpoint_freq` 步在 `save_path` 存 checkpoint，训练结束保存 `sac_lasvsim_final`
 - 用 tensorboard 看曲线：`tensorboard --logdir logs`
 
+## 模型推理 / 评估
+
+训练完成后用 [eval.py](eval.py) 在平台上评估模型（确定性策略，不带探索噪声）：
+
+```bash
+python eval.py --model models/sac_lasvsim_final.zip --episodes 10
+python eval.py --model models/sac_lasvsim_10000_steps.zip --config configs/sac_lasvsim.yaml \
+               --episodes 20 --out eval_results.csv
+```
+
+- 每回合打印：步数、时长、总奖励、均速、平均/最大横向跟踪误差 `|t_error|`、碰撞、终止原因、平台回放链接
+- 汇总输出成功率（正常跑完回合占比）、奖励均值±方差等，并写入 CSV
+- **配置文件必须与训练时一致**（观测维度由 yaml 决定，不一致会导致 predict 报错）
+- 每个回合 reset 会重置交通流，评估场景随机化，适合统计成功率
+
 ## 扩展
 
 - **换任务/剧本**：改 yaml 的 `scenario.task_id / record_id`；运行中换场景会自动重建仿真实例

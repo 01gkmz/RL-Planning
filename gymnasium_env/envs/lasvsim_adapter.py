@@ -38,6 +38,8 @@ class LasVSimAdapter:
         self._ego_id: Optional[str] = None
         self._task_id: Optional[int] = cfg.scenario.task_id
         self._record_id: Optional[int] = cfg.scenario.record_id
+        self._new_record_id: Optional[int] = None  # copy_record 返回的新剧本ID
+        self._sim_record_id: Optional[str] = None  # 仿真记录ID（回放用）
         self._connected = False
         self._step_count = 0
         self._dt = cfg.sim.dt
@@ -81,12 +83,24 @@ class LasVSimAdapter:
         self._client = self._init_client()
         print(f"DEBUG: task_id={self._task_id!r}, record_id={self._record_id!r}")
         new_record = self._client.process_task.copy_record(self._task_id, self._record_id)
+        self._new_record_id = new_record.new_record_id
+        self._sim_record_id = new_record.sim_record_id
         self._sim = self._client.init_simulator_from_config(
             SimulatorConfig(
                 scen_id=new_record.scen_id,
                 scen_ver=new_record.scen_ver,
                 sim_record_id=new_record.sim_record_id,
             )
+        )
+
+    def get_replay_url(self) -> Optional[str]:
+        """千行平台回放链接（当前连接对应的仿真记录）。"""
+        if not self._connected or self._new_record_id is None:
+            return None
+        return (
+            "https://qianxing.risenlighten.com/#/sampleRoad/cartest/"
+            f"?id={self._task_id}&record_id={self._new_record_id}"
+            f"&sim_record_id={self._sim_record_id}"
         )
 
     def _init_client(self):
